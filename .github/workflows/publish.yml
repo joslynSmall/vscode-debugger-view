@@ -1,4 +1,4 @@
-name: Publish VS Code Extension
+name: Publish Extension
 
 on:
   push:
@@ -6,16 +6,54 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+
       - run: npm ci
       - run: npm test
-      - name: Publish to VS Code Marketplace
-        run: npx @vscode/vsce publish -p ${{ secrets.VSCE_PAT }}
+
+      - name: Package VSIX
+        run: npx @vscode/vsce package
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VSIX_FILE=$(ls *.vsix | head -n 1)
+          gh release create "$GITHUB_REF_NAME" "$VSIX_FILE" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes
+
+      - name: Publish to Open VSX (optional)
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          if [ -n "$OVSX_PAT" ]; then
+            VSIX_FILE=$(ls *.vsix | head -n 1)
+            npx ovsx publish "$VSIX_FILE" -p "$OVSX_PAT"
+          else
+            echo "OVSX_PAT not set, skipping Open VSX publish."
+          fi
+
+      - name: Publish to VS Code Marketplace (optional)
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        run: |
+          if [ -n "$VSCE_PAT" ]; then
+            VSIX_FILE=$(ls *.vsix | head -n 1)
+            npx @vscode/vsce publish --packagePath "$VSIX_FILE" -p "$VSCE_PAT"
+          else
+            echo "VSCE_PAT not set, skipping VS Code Marketplace publish."
+          fi
