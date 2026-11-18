@@ -1,0 +1,82 @@
+{
+  "name": "vscode-debugger-view",
+  "displayName": "Debugger View",
+  "description": "AI 驱动的源码单步调用和讲解：静态调用链 + debugger 单步语义，支持 TypeScript、JavaScript 和 Python，不要求项目可运行。",
+  "version": "0.1.0",
+  "publisher": "joslynSmall",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joslynSmall/vscode-debugger-view.git"
+  },
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "tsc -p ./ && node test/acceptance.mjs",
+    "vscode:prepublish": "npm run compile"
+  },
+  "contributes": {
+    "commands": [
+      { "command": "vscode-debugger-view.startStep", "title": "开始单步讲解" },
+      { "command": "vscode-debugger-view.stepOver", "title": "单步跳过" },
+      { "command": "vscode-debugger-view.stepInto", "title": "单步进入" },
+      { "command": "vscode-debugger-view.stepOut", "title": "单步跳出" },
+      { "command": "vscode-debugger-view.jumpToHistory", "title": "跳转到历史步骤" },
+      { "command": "vscode-debugger-view.pickCandidate", "title": "选择候选实现" },
+      { "command": "vscode-debugger-view.forceInto", "title": "手动进入第三方库" },
+      { "command": "vscode-debugger-view.retryExplain", "title": "重新请求讲解" },
+      { "command": "vscode-debugger-view.ask", "title": "追问当前讲解" },
+      { "command": "vscode-debugger-view.restoreSession", "title": "恢复上次单步讲解" }
+    ],
+    "configuration": {
+      "title": "Debugger View",
+      "properties": {
+        "vscode-debugger-view.baseURL": {
+          "type": "string",
+          "default": "",
+          "description": "OpenAI 兼容接口根地址，例如 https://api.openai.com 或 muse2api 的地址。密钥不要写在这里。"
+        },
+        "vscode-debugger-view.model": {
+          "type": "string",
+          "default": "",
+          "description": "chat/completions 使用的模型名。"
+        },
+        "vscode-debugger-view.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "讲解接口的 API Key。设置页以密码显示；请求失败的提示会抹掉这段内容。"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [{
+        "id": "vscode-debugger-view",
+        "title": "单步讲解",
+        "icon": "media/icon.svg"
+      }]
+    },
+    "views": {
+      "vscode-debugger-view": [{
+        "id": "vscode-debugger-view.explain",
+        "name": "单步讲解",
+        "type": "webview"
+      }]
+    },
+    "menus": {
+      "editor/context": [{ "command": "vscode-debugger-view.startStep", "when": "editorLangId == typescript || editorLangId == javascript || editorLangId == python", "group": "navigation" }],
+      "commandPalette": [
+        { "command": "vscode-debugger-view.startStep", "when": "editorLangId == typescript || editorLangId == javascript || editorLangId == python" },
+        { "command": "vscode-debugger-view.stepOver" },
+        { "command": "vscode-debugger-view.stepInto" },
+        { "command": "vscode-debugger-view.stepOut" },
+        { "command": "vscode-debugger-view.restoreSession" }
+      ]
+    },
+    "debuggers": [{ "type": "debugger-view", "label": "Debugger View", "configurationAttributes": { "launch": { "properties": { "name": { "type": "string" } } } } }]
+  },
+  "devDependencies": { "@types/node": "^22.0.0", "@types/vscode": "^1.90.0", "typescript": "^5.9.0" }
+}

@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "strict": true,
+    "allowJs": true,
+    "rootDir": "."
+  },
+  "include": ["src", "node_modules/leftpad"]
+}
